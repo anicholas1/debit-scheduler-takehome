@@ -57,25 +57,61 @@ class App(object):
 
         # Get all of the data since we don't have a serializer yet
         current_date = datetime.now().date()
+        next_date = None
         year = current_date.year
         month = current_date.month
         day = current_date.day
         schedule_type = body.get('schedule_type')
         monthly_pay = body.get('monthly_payment_amount')
+        amount = 0
 
         # Get the business day integer so we can count how many are in the month using calendar
         business_day = DEBIT_WEEKDAY.get(body.get('debit_day_of_week'))
         start_date = datetime.strptime(body.get('debit_start_date'), "%Y-%m-%d").date()
 
         num_debit_days = 0
-        for d in range(1, monthrange(year, month)[1] + 1):
-            if weekday(year, month, d) == business_day:
+        possible_debit_days = []
+        debit_days = []
+        # Get all possible debit days first
+        for w in monthcalendar(year, month):
+            if w[business_day] != 0:
+                possible_debit_days.append(w[business_day])
                 num_debit_days += 1
 
+        # TODO also factor in start_date! What if it doens't start till the 12th but its the 5th
         if schedule_type == 'biweekly':
-            amount = monthly_pay / (num_debit_days / 2)
+            if len(possible_debit_days) > 4:
+                amount = monthly_pay / 3
+                # 3 possible debit days since we have 5 business days this month. Assuming starting from the beginning
+                # of the month
+                debit_days.append(possible_debit_days[0])
+                debit_days.append(possible_debit_days[2])
+                debit_days.append(possible_debit_days[4])
+            else:
+                # only 2 possible debit days assuming we are starting from the beginning of the month
+                amount = monthly_pay / 2
+                debit_days.append(possible_debit_days[0])
+                debit_days.append(possible_debit_days[2])
 
-        next_date = start_date + timedelta(days=14)
+            # Find the next debit date based on current date using our debit days found earlier
+            # Also make sure the next debit day is after the start day
+            for d in debit_days:
+                if start_date.month == month:
+                    if d > day and d >= start_date.day:
+                        next_date = datetime(year, month, d).date()
+                        break
+                else:
+                    if d > day:
+                        next_date = datetime(year, month, d).date()
+                        break
+
+            if next_date is None:
+                # Current date is past last pay date of the month based on the initial start date
+                # so we need to go to the next month. We will iterate over just the first week
+                for w in monthcalendar(year, month + 1):
+                    next_date = datetime(year, month+1, w[business_day]).date()
+                    break
+
         response = {'debit':
                             {
                                 'amount': amount,
