@@ -78,6 +78,9 @@ class App(object):
                 possible_debit_days.append(w[business_day])
                 num_debit_days += 1
 
+        # Not super proud of this, but this allows me to account for payments made late in the last month.
+        # First week of June would be skipped since a payment was made May 31st
+        # (if we don't account for federal holidays)
         prev_debit_days = []
         for w in monthcalendar(year, month - 1):
             if w[business_day] != 0:

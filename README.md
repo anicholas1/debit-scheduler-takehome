@@ -1,4 +1,13 @@
 
+# Notes from Your Fellow Programmer
+
+## Room for Improvement
+
+- Account for Federal Holidays. I'd like to loop through my possible_debit_days and check them against a dict that contains all federal holidays
+- More comprehensive tests should be added for all months to ensure no edge cases are missed. Including leap years.
+- Add support for other periods. Weekly, Monthly, etc.
+- Break out some of the date functionality to make the code a bit more readable! 
+
 # Debit Scheduler Take-home
 
 Welcome! If you're reading this, odds are that you're interviewing for a backend engineering role at EarnUp. We are excited to continue the conversation! Your mission, should you choose to accept, is to build a debit scheduling endpoint for loans.
