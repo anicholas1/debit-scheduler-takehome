@@ -78,7 +78,15 @@ class App(object):
                 possible_debit_days.append(w[business_day])
                 num_debit_days += 1
 
-        # TODO also factor in start_date! What if it doens't start till the 12th but its the 5th
+        prev_debit_days = []
+        for w in monthcalendar(year, month - 1):
+            if w[business_day] != 0:
+                prev_debit_days.append(w[business_day])
+                num_debit_days += 1
+        if len(prev_debit_days) == 5 and start_date.month != month:
+            possible_debit_days.pop(0)
+
+        # TODO also factor in start_date! What if it doesn't start till the 12th but its the 5th
         if schedule_type == 'biweekly':
             if len(possible_debit_days) > 4:
                 amount = monthly_pay / 3
@@ -95,6 +103,9 @@ class App(object):
 
             # Find the next debit date based on current date using our debit days found earlier
             # Also make sure the next debit day is after the start day
+            # TODO make sure the previous month didn't have a payment at the end of the month.
+            #  This would lead to skipping the first week of June
+
             for d in debit_days:
                 if start_date.month == month:
                     if d > day and d >= start_date.day:
